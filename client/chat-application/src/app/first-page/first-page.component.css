@@ -1,0 +1,72 @@
+/* .welcome-page styles */
+.welcome-page {
+    text-align: center;
+    padding: 50px;
+    animation: fadeIn 2s;
+    background-color: #230538; /* Dark purple background for the entire page */
+    color: white; /* Ensure text color contrasts well with the dark background */
+    min-height: 100vh; /* Full viewport height */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Center content vertically */
+    align-items: center; /* Center content horizontally */
+  }
+  
+  /* App name image styles */
+  .app-name-image {
+    width: 60vw; /* 60% of viewport width */
+    height: auto; /* Maintain aspect ratio */
+    max-height: 30vh; /* Limit height to avoid overflow */
+    margin-bottom: 30px;
+    animation: appNameAnimation 2s infinite; /* Apply animation */
+  }
+  
+  /* App image styles */
+  .app-image {
+    width: 70vw; /* 70% of viewport width */
+    height: 60vh; /* Increased height for a larger image */
+    object-fit: cover; /* Ensure the image covers the area without distortion */
+    margin-bottom: 30px;
+    border-radius: 10px; /* Optional: add rounded corners */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Optional: add shadow for better visual depth */
+  }
+  
+  /* Redirect button styles */
+  .redirect-button {
+    display: inline-block; /* Ensure button is treated as a block for centering */
+    padding: 15px 30px; /* Increased padding for a wider button */
+    font-size: 20px; /* Larger font size */
+    background-color: #ed1111; /* Red background */
+    color: white;
+    border: none;
+    border-radius: 8px; /* Slightly larger rounded corners */
+    cursor: pointer;
+    animation: buttonAnimation 1s infinite;
+    margin-top: 20px; /* Space above the button */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Shadow effect for the button */
+  }
+  
+  .redirect-button:hover {
+    background-color: #CC0000; /* Slightly darker red on hover */
+  }
+  
+  /* Fade in animation for the welcome page */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  /* Animation for the button */
+  @keyframes buttonAnimation {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  
+  /* Animation for the app name image */
+  @keyframes appNameAnimation {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.8; }
+  }
+  
