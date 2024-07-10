@@ -7,8 +7,10 @@ import { io } from 'socket.io-client';
 })
 export class BuzzService {
   public message$: BehaviorSubject<string> = new BehaviorSubject('');
-  public users$: BehaviorSubject<{ [key: string]: string }> = new BehaviorSubject({});
+  public users$: BehaviorSubject<{ [key: string]: string }> =
+    new BehaviorSubject({});
   public buzzerEvents$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
+  public room$: BehaviorSubject<string> = new BehaviorSubject('');
 
   socket = io('http://localhost:3000');
 
@@ -25,11 +27,32 @@ export class BuzzService {
       const events = this.buzzerEvents$.value;
       this.buzzerEvents$.next([...events, event]);
     });
+
+    this.socket.on('roomCreated', (roomId: string) => {
+      this.room$.next(roomId);
+      console.log('instatiionnmbdj');
+    });
   }
 
   public sendMessage(message: any) {
     this.socket.emit('message', message);
-  } 
+  }
+
+  public createRoom() {
+    this.socket.emit('createRoom');
+  }
+
+  public joinRoom(roomId: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.socket.emit('joinRoom', roomId, (success: boolean) => {
+        if (success) {
+          resolve(success);
+        } else {
+          reject('Failed to join room');
+        }
+      });
+    });
+  }
 
   public pressBuzzer() {
     this.socket.emit('buzzer');
@@ -49,5 +72,9 @@ export class BuzzService {
 
   public getBuzzerEvents(): Observable<any[]> {
     return this.buzzerEvents$.asObservable();
+  }
+
+  public getRoom(): Observable<string> {
+    return this.room$.asObservable();
   }
 }

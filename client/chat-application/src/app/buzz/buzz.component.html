@@ -18,6 +18,16 @@
       <h3>Set Your Name</h3>
       <input [(ngModel)]="userName" placeholder="Enter your name" />
       <button (click)="setName()">Set Name</button>
+
+
+      <h3>Room Management</h3>
+      <div>
+        <button (click)="createRoom()">Create Room</button>
+        <span *ngIf="roomId">Room ID: {{ roomId }}</span>
+        <br>
+        <input [(ngModel)]="roomId" placeholder="Enter Room ID to Join" />
+        <button (click)="joinRoom()">Join Room</button>
+      </div>
     </div>
   
     <div class="sidebar right">
