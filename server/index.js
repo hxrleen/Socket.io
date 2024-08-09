@@ -18,7 +18,7 @@ let userBuzzes = {}; // Tracks if a user has already buzzed in single buzz rooms
 let buzzerEvents = {}; // Tracks buzzer events for each room
 let roomRounds = {}; // Stores round information for each room
 
-let currentRound = 1;
+// let currentRound = 0; -----------------------
 
 io.on('connection', (socket) => {
   console.log(`A user connected: ${socket.id}`);
@@ -46,6 +46,8 @@ io.on('connection', (socket) => {
     socket.emit('roomCreated', roomId); // Emit the roomId only to the creator
     emitRoomUsers(roomId); // Emit the user list to the room
   });
+
+
 
   socket.on('joinRoom', (roomId, callback) => {  
     if (roomId && rooms[roomId]) {
@@ -76,7 +78,7 @@ io.on('connection', (socket) => {
       if (roomConfigs[roomId] === 'single' && userBuzzes[socket.id]) {
         socket.emit('notification', 'You can only buzz once in this room.');
       } else {
-        const event = { name: users[socket.id].name, timestamp };
+        const event = { name: users[socket.id].name, timestamp, round: roomRounds[roomId].currentRound };  //2--------------------
         io.to(roomId).emit('buzzer', event); // Use user name
         buzzerEvents[roomId].push(event); // Save the event
         if (roomConfigs[roomId] === 'single') {
@@ -139,6 +141,7 @@ io.on('connection', (socket) => {
     }
   });
 
+
   socket.on('disconnect', () => {
     console.log(`A user disconnected: ${socket.id}`);
     const roomId = getRoomIdForSocket(socket.id);
@@ -159,22 +162,30 @@ io.on('connection', (socket) => {
   });
 
   socket.on('startTimer', (roomId) => {
-    io.to(roomId).emit('startTimer', 30); // Emit to all clients in the room to start a 30-second timer
+    if (roomRounds[roomId]) {
+      roomRounds[roomId].currentRound += 1;  //--------------------
+      io.to(roomId).emit('startTimer', 30); // Emit to all clients in the room to start a 30-second timer
+      io.to(roomId).emit('updateRound', roomRounds[roomId].currentRound); //----------------------
+      console.log('start timer');
+    }
   });
 
 
 
   socket.on('timerEnded', (roomId) => {
     io.to(roomId).emit('timerEnded'); // Notify all clients in the room that the timer has ended
-    currentRound += 1; // Increment round after the timer ends
-    io.to(roomId).emit('updateRound', currentRound); // Notify clients of the new round
+    // Increment round after the timer ends
+
+    // io.to(roomId).emit('updateRound', currentRound); // Notify clients of the new round -----------------
     userBuzzes = {}; // Reset buzzer press state for the new round
   });
+
+
 
   socket.on('setGameRounds', (roomId, totalRounds) => {
     if (roomId && users[socket.id].isHost && Number.isInteger(totalRounds)) {
       roomRounds[roomId].totalRounds = totalRounds;
-      roomRounds[roomId].currentRound = 0; // Reset current round
+      roomRounds[roomId].currentRound = 0; // Reset current round for the new game session
       io.to(roomId).emit('gameRoundsSet', totalRounds); // Notify all clients in the room
     }
   });
