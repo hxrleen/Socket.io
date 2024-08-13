@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const crypto = require('crypto');
+const { log } = require('console');
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -76,7 +77,10 @@ io.on('connection', (socket) => {
     const roomId = getRoomIdForSocket(socket.id);
     if (roomId) {
       if (roomConfigs[roomId] === 'single' && userBuzzes[socket.id]) {
-        socket.emit('notification', 'You can only buzz once in this room.');
+
+        // if (roomRounds[roomId].currentRound <= totalRounds - 1) {
+        console.log('log once')
+        socket.emit('notification', 'You can only buzz once in this round.');
       } else {
         const event = { name: users[socket.id].name, timestamp, round: roomRounds[roomId].currentRound };  //2--------------------
         io.to(roomId).emit('buzzer', event); // Use user name
@@ -161,15 +165,31 @@ io.on('connection', (socket) => {
     delete userBuzzes[socket.id]; // Clear buzzed state
   });
 
-  socket.on('startTimer', (roomId) => {
+  socket.on('startTimer', (roomId, totalRounds) => {
     if (roomRounds[roomId]) {
-      roomRounds[roomId].currentRound += 1;  //--------------------
-      io.to(roomId).emit('startTimer', 30); // Emit to all clients in the room to start a 30-second timer
-      io.to(roomId).emit('updateRound', roomRounds[roomId].currentRound); //----------------------
-      console.log('start timer');
+      // Check if the current round is less than or equal to the total rounds
+      if (roomRounds[roomId].currentRound <= totalRounds - 1) {
+
+        // Increment the current round (0-based index)
+        roomRounds[roomId].currentRound += 1;
+
+        // Log the current round and total rounds for debugging
+
+        io.to(roomId).emit('roundStarted', roomRounds[roomId].currentRound); // Notify all clients in the room
+
+        // Emit a 30-second timer to all clients in the room
+        io.to(roomId).emit('startTimer', 30);
+
+        // Notify clients of the updated round (1-based index for display)
+        io.to(roomId).emit('updateRound', roomRounds[roomId].currentRound);
+
+        console.log('start timer'); // Log that the timer has started
+      } else {
+        // Notify the client that all rounds have been completed
+        io.to(roomId).emit('notification', 'All rounds have been completed.');
+      }
     }
   });
-
 
 
   socket.on('timerEnded', (roomId) => {
@@ -180,8 +200,6 @@ io.on('connection', (socket) => {
     userBuzzes = {}; // Reset buzzer press state for the new round
   });
 
-
-
   socket.on('setGameRounds', (roomId, totalRounds) => {
     if (roomId && users[socket.id].isHost && Number.isInteger(totalRounds)) {
       roomRounds[roomId].totalRounds = totalRounds;
@@ -190,16 +208,16 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('startRound', (roomId) => {
-    if (roomId && users[socket.id].isHost) {
-      if (roomRounds[roomId].currentRound < roomRounds[roomId].totalRounds) {
-        roomRounds[roomId].currentRound += 1;
-        io.to(roomId).emit('roundStarted', roomRounds[roomId].currentRound); // Notify all clients in the room
-      } else {
-        socket.emit('notification', 'All rounds have been completed.');
-      }
-    }
-  });
+  // socket.on('startRound', (roomId) => {
+  //   if (roomId && users[socket.id].isHost) {
+  //     if (roomRounds[roomId].currentRound < roomRounds[roomId].totalRounds) {
+  //       roomRounds[roomId].currentRound += 1;
+  //       io.to(roomId).emit('roundStarted', roomRounds[roomId].currentRound); // Notify all clients in the room
+  //     } else {
+  //       io.to(roomId).emit('notification', 'All rounds have been completed.');
+  //     }
+  //   }
+  // });
 
   socket.on('endRound', (roomId) => {
     if (roomId && users[socket.id].isHost) {
@@ -209,6 +227,7 @@ io.on('connection', (socket) => {
       }
     }
   });
+
 });
 
 // Emit users in a specific room
